@@ -55,8 +55,14 @@ int der_encode_custom_type(const ltc_asn1_list *root,
    if ((err = der_length_asn1_identifier(root, &id_len)) != CRYPT_OK) return CRYPT_INVALID_ARG;
    x = id_len;
 
+   list = root->data;
+   inlen = root->size;
 
    if (root->pc == LTC_ASN1_PC_PRIMITIVE) {
+      /* Make sure we only encode what we can decode */
+      if((inlen != 1) || (list->type == LTC_ASN1_CUSTOM_TYPE)) {
+         return CRYPT_INVALID_ARG;
+      }
       /* In case it's a PRIMITIVE type we encode directly to the output
        * but leave space for a potentially longer identifier as it will
        * simply be replaced afterwards.
@@ -71,8 +77,6 @@ int der_encode_custom_type(const ltc_asn1_list *root,
       x += y;
    }
 
-   list = root->data;
-   inlen = root->size;
    /* store data */
    *outlen -= x;
    for (i = 0; i < inlen; i++) {
