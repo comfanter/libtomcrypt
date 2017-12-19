@@ -2251,6 +2251,14 @@
 					>
 				</File>
 				<File
+					RelativePath="src\pk\ecc\ecc_get_key.c"
+					>
+				</File>
+				<File
+					RelativePath="src\pk\ecc\ecc_get_set.c"
+					>
+				</File>
+				<File
 					RelativePath="src\pk\ecc\ecc_get_size.c"
 					>
 				</File>
@@ -2260,6 +2268,18 @@
 				</File>
 				<File
 					RelativePath="src\pk\ecc\ecc_make_key.c"
+					>
+				</File>
+				<File
+					RelativePath="src\pk\ecc\ecc_set_dp.c"
+					>
+				</File>
+				<File
+					RelativePath="src\pk\ecc\ecc_set_dp_internal.c"
+					>
+				</File>
+				<File
+					RelativePath="src\pk\ecc\ecc_set_key.c"
 					>
 				</File>
 				<File
@@ -2283,7 +2303,19 @@
 					>
 				</File>
 				<File
-					RelativePath="src\pk\ecc\ltc_ecc_is_valid_idx.c"
+					RelativePath="src\pk\ecc\ltc_ecc_export_point.c"
+					>
+				</File>
+				<File
+					RelativePath="src\pk\ecc\ltc_ecc_import_point.c"
+					>
+				</File>
+				<File
+					RelativePath="src\pk\ecc\ltc_ecc_is_point.c"
+					>
+				</File>
+				<File
+					RelativePath="src\pk\ecc\ltc_ecc_is_point_at_infinity.c"
 					>
 				</File>
 				<File
@@ -2312,6 +2344,10 @@
 				</File>
 				<File
 					RelativePath="src\pk\ecc\ltc_ecc_projective_dbl_point.c"
+					>
+				</File>
+				<File
+					RelativePath="src\pk\ecc\ltc_ecc_verify_key.c"
 					>
 				</File>
 			</Filter>
