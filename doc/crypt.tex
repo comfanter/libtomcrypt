@@ -5563,6 +5563,10 @@ typedef struct {
    void                  *data;
    unsigned long          size;
    int                    used;
+   int                    optional;
+   ltc_asn1_class         class;
+   ltc_asn1_pc            pc;
+   ulong64                tag;
    struct ltc_asn1_list_ *prev,  *next,
                          *child, *parent;
 } ltc_asn1_list;
@@ -5625,9 +5629,8 @@ LTC_SET_ASN1(sequence, x++, LTC_ASN1_NULL,           NULL,   0);
 \hline LTC\_ASN1\_SETOF              & SET OF \\
 \hline LTC\_ASN1\_RAW\_BIT\_STRING   & BIT STRING (one octet per char) \\
 \hline LTC\_ASN1\_TELETEX\_STRING    & TELETEX STRING (one octet per char) \\
-\hline LTC\_ASN1\_CONSTRUCTED        & A constructed type that is not SEQUENCE or SET \\
-\hline LTC\_ASN1\_CONTEXT\_SPECIFIC  & A context-specific type \\
 \hline LTC\_ASN1\_GENERALIZEDTIME    & GeneralizedTime (see ltc\_generalizedtime structure) \\
+\hline LTC\_ASN1\_CUSTOM\_TYPE       & A custom type (see LTC\_SET\_ASN1\_IDENTIFIER) \\
 \hline
 \end{tabular}
 \caption{List of ASN.1 Supported Types}
@@ -5635,6 +5638,31 @@ LTC_SET_ASN1(sequence, x++, LTC_ASN1_NULL,           NULL,   0);
 \end{small}
 \end{center}
 \end{figure}
+
+\index{LTC\_SET\_ASN1\_IDENTIFIER macro} \index{LTC\_ASN1\_CUSTOM\_TYPE}
+
+To be able to encode and decode all other valid ASN.1 Identifiers, such as Context-Specific types the macro
+\textit{LTC\_SET\_ASN1\_IDENTIFIER(list, index, Class, Pc, Tag)} has been provided.
+
+It will assign to the \textit{index}th position in the \textit{list} the Identifier-triplet (Class, Pc, Tag).
+It has to be used in combination with the \textit{LTC\_SET\_ASN1} macro.  An example usage would be:
+
+\begin{small}
+\begin{verbatim}
+...
+ltc_asn1_list   sequence[3], custom[1];
+unsigned long   three=3;
+
+LTC_SET_ASN1(sequence, 0, LTC_ASN1_IA5_STRING,    "hello", 5);
+LTC_SET_ASN1(sequence, 1, LTC_ASN1_SHORT_INTEGER, &three,  1);
+LTC_SET_ASN1(sequence, 2, LTC_ASN1_NULL,           NULL,   0);
+
+LTC_SET_ASN1(custom, 0, LTC_ASN1_CUSTOM_TYPE,   sequence,  1);
+LTC_SET_ASN1_IDENTIFIER(custom, 0, LTC_ASN1_CL_CONTEXT_SPECIFIC, LTC_ASN1_PC_CONSTRUCTED, 0);
+\end{verbatim}
+\end{small}
+
+This would (un)pack the given sequence from/in the context-specific tag \textit{[0]}.
 
 \subsection{SEQUENCE Type}
 The SEQUENCE data type is a collection of other ASN.1 data types encapsulated with a small header which is a useful way of sending multiple data types in one packet.
@@ -6139,7 +6167,31 @@ This will decode the input in the \textit{in} field of length \textit{inlen}.  I
 \textit{outlen} elements.  The \textit{inlen} field will be updated with the length of the decoded data type, as well as the respective entry in the \textit{list} field
 will have the \textit{used} flag set to non--zero to reflect it was the data type decoded.
 
+\subsection{ASN.1 Custom Types}
+
+To be able to represent all other valid types besides the primitive types having their own decoder, the \textit{custom_type} de- & encoders are provided.
+
+\index{der\_encode\_custom\_type()} \index{der\_decode\_custom\_type()} \index{der\_length\_custom\_type()} \index{LTC\_ASN1\_CUSTOM\_TYPE}
+\begin{verbatim}
+int der_encode_custom_type(const ltc_asn1_list *root,
+                                 unsigned char *out, unsigned long *outlen);
+
+int der_decode_custom_type(const unsigned char *in, unsigned long inlen,
+                                 ltc_asn1_list *root);
+
+int der_length_custom_type(const ltc_asn1_list *root,
+                                 unsigned long *outlen,
+                                 unsigned long *payloadlen);
+\end{verbatim}
+
+The usage of this de- & encoder is a bit different than the others since the type to be encoded has to be passed to the function.
+Therefore the \textit{root} parameter identifies the type that should be encoded which has been set by the \textit{LTC\_SET\_ASN1}
+and \textit{LTC\_SET\_ASN1\_IDENTIFIER} macros.
+The value to de-/encode has to be linked through the \textit{data} argument of the \textit{LTC\_SET\_ASN1} macro, as done for sequences.
+The value that should be de-/encoded can either be a primitive or a constructed type.
+
 \subsection{ASN.1 Flexi Decoder}
+
 The ASN.1 \textit{flexi} decoder allows the developer to decode arbitrary ASN.1 DER packets (provided they use data types LibTomCrypt supports) without first knowing
 the structure of the data.  Where der\_decode\_sequence() requires the developer to specify the data types to decode in advance the flexi decoder is entirely
 free form.
@@ -6152,8 +6204,6 @@ When a SEQUENCE or SET has been encountered a SEQUENCE (or SET resp.) item will 
 pointer points to a new list of items contained within the object.
 
 \index{der\_decode\_sequence\_flexi()}
-\index{LTC\_ASN1\_CONSTRUCTED}
-\index{LTC\_ASN1\_CONTEXT\_SPECIFIC}
 \begin{verbatim}
 int  der_decode_sequence_flexi(const unsigned char *in,
                                      unsigned long *inlen,
@@ -6175,18 +6225,12 @@ However the parent processing will continue with a "soft-error".
 This can be detected by checking for \textit{child} elements with
 type \textbf{LTC\_ASN1\_EOL} after decoding.
 
-As of v1.18.0 the flexi decoder will also decode arbitrary constructed types
-other than SEQUENCE and SET. The \textit{type} field will be set to
-\textbf{LTC\_ASN1\_CONSTRUCTED} and the plain identifier that was indicated in the ASN.1
-encoding is stored in the \textit{used} field. Further decoding is done in the
-same way as if it were a SEQUENCE or SET.
+The v1.18.0 of the library had support for decoding two new types, \textbf{LTC\_ASN1\_CONSTRUCTED} and \textbf{LTC\_ASN1\_CONTEXT\_SPECIFIC},
+which has been replaced in FIXME-version-next by a more complete approach.
 
-Also as of v1.18.0 the flexi decoder is capable to handle
-\textit{context-specific} encodings. The \textit{type} field will be set to
-\textbf{LTC\_ASN1\_CONTEXT\_SPECIFIC} and the plain identifier that was indicated
-in the ASN.1 encoding is stored in the \textit{used} field. Encapsulated data
-in the \textit{context-specific} encoding is copied to newly allocated memory
-and is accessible through the \textit{data} field.
+As of FIXME-version-next all ASN.1 Identifiers which don't have a decoder implemented (and thereby their own type) will be marked as
+\textbf{LTC\_ASN1\_CUSTOM\_TYPE}.
+
 
 \textbf{Note:} the list decoded by this function is \textbf{NOT} in the correct form for der\_encode\_sequence() to use directly.  You will first
 have to convert the list by first storing all of the siblings in an array then storing all the children as sub-lists of a sequence using the \textit{.data}
