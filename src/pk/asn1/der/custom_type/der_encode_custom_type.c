@@ -32,7 +32,7 @@ int der_encode_custom_type(const ltc_asn1_list *root,
 {
    int           err;
    ltc_asn1_type type;
-   ltc_asn1_list *list;
+   const ltc_asn1_list *list;
    unsigned long size, x, y, z, i, inlen, id_len;
    void          *data;
 
@@ -55,20 +55,18 @@ int der_encode_custom_type(const ltc_asn1_list *root,
    if ((err = der_length_asn1_identifier(root, &id_len)) != CRYPT_OK) return CRYPT_INVALID_ARG;
    x = id_len;
 
-   list = root->data;
-   inlen = root->size;
 
    if (root->pc == LTC_ASN1_PC_PRIMITIVE) {
-      /* Make sure we only encode what we can decode */
-      if((inlen != 1) || (list->type == LTC_ASN1_CUSTOM_TYPE)) {
-         return CRYPT_INVALID_ARG;
-      }
+      list = root;
+      inlen = 1;
       /* In case it's a PRIMITIVE type we encode directly to the output
        * but leave space for a potentially longer identifier as it will
        * simply be replaced afterwards.
        */
       x -= 1;
    } else {
+      list = root->data;
+      inlen = root->size;
       /* store length, identifier will be added later */
       y = *outlen - x;
       if ((err = der_encode_asn1_length(z, &out[x], &y)) != CRYPT_OK) {
@@ -80,7 +78,11 @@ int der_encode_custom_type(const ltc_asn1_list *root,
    /* store data */
    *outlen -= x;
    for (i = 0; i < inlen; i++) {
-       type = list[i].type;
+       if (root->pc == LTC_ASN1_PC_PRIMITIVE) {
+          type = (ltc_asn1_type)list[i].used;
+       } else {
+          type = list[i].type;
+       }
        size = list[i].size;
        data = list[i].data;
 

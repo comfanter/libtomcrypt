@@ -576,11 +576,19 @@ typedef struct ltc_asn1_list_ {
       LTC_MACRO_list[LTC_MACRO_temp].tag = (Tag);                 \
    } while (0)
 
-#define LTC_SET_ASN1_CUSTOM(list, index, Class, Pc, Tag, Data)    \
+#define LTC_SET_ASN1_CUSTOM_CONSTRUCTED(list, index, Class, Tag, Data)    \
    do {                                                           \
       int LTC_MACRO_temp##__LINE__ = (index);                     \
       LTC_SET_ASN1(list, LTC_MACRO_temp##__LINE__, LTC_ASN1_CUSTOM_TYPE, Data, 1);   \
-      LTC_SET_ASN1_IDENTIFIER(list, LTC_MACRO_temp##__LINE__, Class, Pc, Tag);       \
+      LTC_SET_ASN1_IDENTIFIER(list, LTC_MACRO_temp##__LINE__, Class, LTC_ASN1_PC_CONSTRUCTED, Tag);       \
+   } while (0)
+
+#define LTC_SET_ASN1_CUSTOM_PRIMITIVE(list, index, Class, Tag, Type, Data, Size)    \
+   do {                                                           \
+      int LTC_MACRO_temp##__LINE__ = (index);                     \
+      LTC_SET_ASN1(list, LTC_MACRO_temp##__LINE__, LTC_ASN1_CUSTOM_TYPE, Data, Size);   \
+      LTC_SET_ASN1_IDENTIFIER(list, LTC_MACRO_temp##__LINE__, Class, LTC_ASN1_PC_PRIMITIVE, Tag);       \
+      list[LTC_MACRO_temp##__LINE__].used = (int)(Type);       \
    } while (0)
 
 extern const char*          der_asn1_class_to_string_map[];

@@ -1067,7 +1067,7 @@ static int der_choice_n_custom_test(void)
        }
 
        LTC_SET_ASN1(custom, 0, LTC_ASN1_NULL, NULL, 0);
-       LTC_SET_ASN1_CUSTOM(types, y++, LTC_ASN1_CL_CONTEXT_SPECIFIC, LTC_ASN1_PC_CONSTRUCTED, 0, custom);
+       LTC_SET_ASN1_CUSTOM_CONSTRUCTED(types, y++, LTC_ASN1_CL_CONTEXT_SPECIFIC, 0, custom);
 
        LTC_SET_ASN1(types, y++, LTC_ASN1_UTF8_STRING, utf8buf, sizeof(utf8buf)/sizeof(utf8buf[0]));
 
@@ -1080,7 +1080,11 @@ static int der_choice_n_custom_test(void)
 
        /* custom encode */
        child[0] = types[x % n];
-       LTC_SET_ASN1_CUSTOM(root, 0, LTC_ASN1_CL_CONTEXT_SPECIFIC, LTC_ASN1_PC_CONSTRUCTED, 1U << x, child);
+       if (x < n) {
+          LTC_SET_ASN1_CUSTOM_CONSTRUCTED(root, 0, LTC_ASN1_CL_CONTEXT_SPECIFIC, 1U << (x % n), child);
+       } else {
+          LTC_SET_ASN1_CUSTOM_PRIMITIVE(root, 0, LTC_ASN1_CL_CONTEXT_SPECIFIC, 1U << (x % n), child->type, child->data, child->size);
+       }
        custlen = sizeof(custbuf);
        /* don't try to custom-encode a primitive custom-type */
        if (child[0].type != LTC_ASN1_CUSTOM_TYPE || root->pc != LTC_ASN1_PC_PRIMITIVE) {
@@ -1162,7 +1166,7 @@ static void der_custom_test(void)
    boolean = 0x1;
    LTC_SET_ASN1(bool_ean, 0, LTC_ASN1_BOOLEAN, &boolean, 1);
    LTC_SET_ASN1(seq1, 0, LTC_ASN1_SEQUENCE, bool_ean, 1);
-   LTC_SET_ASN1_CUSTOM(custom, 0, LTC_ASN1_CL_CONTEXT_SPECIFIC, LTC_ASN1_PC_CONSTRUCTED, 0x1000, seq1);
+   LTC_SET_ASN1_CUSTOM_CONSTRUCTED(custom, 0, LTC_ASN1_CL_CONTEXT_SPECIFIC, 0x1000, seq1);
 
    DO(der_length_custom_type(custom, &len, NULL));
    len = sizeof(buf);
@@ -1180,15 +1184,14 @@ static void der_custom_test(void)
    boolean = 0x0;
    DO(der_decode_sequence(buf, len, custom, 1));
 
-   LTC_SET_ASN1_CUSTOM(custom, 0, LTC_ASN1_CL_CONTEXT_SPECIFIC, LTC_ASN1_PC_PRIMITIVE, 0x8000, bool_ean);
-   DO(der_length_custom_type(custom, &len, NULL));
+   LTC_SET_ASN1_CUSTOM_PRIMITIVE(bool_ean, 0, LTC_ASN1_CL_CONTEXT_SPECIFIC, 0x8000, LTC_ASN1_BOOLEAN, &boolean, 1);
+   DO(der_length_custom_type(bool_ean, &len, NULL));
    len = sizeof(buf);
-   DO(der_encode_custom_type(custom, buf, &len));
+   DO(der_encode_custom_type(bool_ean, buf, &len));
    _der_decode_print(buf, &len);
 
-   LTC_SET_ASN1(bool_ean, 0, LTC_ASN1_BOOLEAN, &boolean, 1);
-   LTC_SET_ASN1_CUSTOM(custom, 0, LTC_ASN1_CL_CONTEXT_SPECIFIC, LTC_ASN1_PC_PRIMITIVE, 0x8000, bool_ean);
-   DO(der_decode_custom_type(buf, len, custom));
+   LTC_SET_ASN1_CUSTOM_PRIMITIVE(bool_ean, 0, LTC_ASN1_CL_CONTEXT_SPECIFIC, 0x8000, LTC_ASN1_BOOLEAN, &boolean, 1);
+   DO(der_decode_custom_type(buf, len, bool_ean));
 
    len = sizeof(buf1);
    _der_decode_print(buf1, &len);
