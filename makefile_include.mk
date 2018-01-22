@@ -141,7 +141,7 @@ TEST=test
 USEFUL_DEMOS   = hashsum
 
 # Demos that are usable but only rarely make sense to be installed
-USEABLE_DEMOS  = ltcrypt sizes constants
+USEABLE_DEMOS  = ltcrypt sizes constants aesgcm
 
 # Demos that are used for testing or measuring
 TEST_DEMOS     = small tv_gen
