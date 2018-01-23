@@ -103,6 +103,25 @@ int pkcs_5_alg2(const unsigned char *password, unsigned long password_len,
 int pkcs_5_test (void);
 #endif  /* LTC_PKCS_5 */
 
+
+#ifdef LTC_PKCS_7
+
+#define LTC_PKCS_7_PAD_MIN     0x0000U
+#ifdef LTC_RNG_GET_BYTES
+/* ISO-10126 compatible padding */
+#define LTC_PKCS_7_PAD_RAND    0x1000U
+#endif
+
+#ifdef LTC_SOURCE
+/* internal helper functions */
+#define LTC_PKCS_7_PAD_MASK   (0x1000U)
+#endif
+
+int pkcs7_padded_length(unsigned long *length, unsigned long mode);
+int pkcs7_pad(unsigned char *data, unsigned long length, unsigned long padded_length, unsigned long mode);
+int pkcs7_depad(unsigned char *data, unsigned long *length, unsigned long mode);
+#endif  /* LTC_PKCS_7 */
+
 /* ref:         $Format:%D$ */
 /* git commit:  $Format:%H$ */
 /* commit time: $Format:%ai$ */
