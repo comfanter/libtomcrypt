@@ -1555,6 +1555,22 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="pkcs7"
+				>
+				<File
+					RelativePath="src\misc\pkcs7\pkcs7_depad.c"
+					>
+				</File>
+				<File
+					RelativePath="src\misc\pkcs7\pkcs7_pad.c"
+					>
+				</File>
+				<File
+					RelativePath="src\misc\pkcs7\pkcs7_padded_length.c"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="modes"
