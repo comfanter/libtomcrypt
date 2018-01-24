@@ -6555,6 +6555,70 @@ int base32_decode(const unsigned char *in,
                         base32_alphabet id);
 \end{verbatim}
 
+\mysection{PKCS \#7}
+The library provides functions to pad and depad according to the RFC 5652 CMS/PKCS \#7 standard and the ISO-10126 standard.
+
+ISO-10126 support is only available when the library is built with \textit{rng\_get\_bytes()} support.
+
+ISO-10126 support is only provided for historical reasons (it was used e.g. in earlier versions of TLS/SSL) and should not be used for new solutions.
+
+\subsection{PKCS \#7 mode argument}
+
+All functions have a \textit{mode} argument which must be set to the bit-wise OR of the desired block-length and one of the modes as shown in the following table:
+
+\begin{center}
+\begin{tabular}{|l|l|}
+     \hline \textbf{mode} & \textbf{Standard} \\
+     \hline LTC\_PKCS\_7\_PAD\_MIN & RFC-5652 / PKCS \#7 \\
+     \hline LTC\_PKCS\_7\_PAD\_RAND & ISO-10126 \\
+     \hline
+\end{tabular}
+\end{center}
+
+\subsection{PKCS \#7 padding}
+
+To pad data a two-step procedure is required.
+
+First get the desired padding length by calling:
+
+\index{pkcs7\_padded\_length()}
+\begin{verbatim}
+int pkcs7_padded_length(unsigned long *length,
+                        unsigned long  mode);
+\end{verbatim}
+
+Where \textit{length} is a pointer that should contain the length of data to pad on input and will contain the padded data-length.
+
+To pad the data call:
+
+\index{pkcs7\_pad()}
+\begin{verbatim}
+int pkcs7_pad(unsigned char *data,
+              unsigned long  length,
+              unsigned long  padded_length,
+              unsigned long  mode);
+\end{verbatim}
+
+Where \textit{data} is a pointer to the data to pad,
+\textit{length} is the original length of the data to pad and
+\textit{padded\_length} is the length to pad the data to.
+It has be assured that the buffer is at least \textit{padded\_length} bytes wide.
+
+\subsection{PKCS \#7 depadding}
+
+To depad data call:
+
+\index{pkcs7\_depad()}
+\begin{verbatim}
+int pkcs7_depad(unsigned char *data,
+                unsigned long *length,
+                unsigned long  mode);
+\end{verbatim}
+
+Where \textit{data} is a pointer to the data to depad,
+\textit{length} is a pointer that should contain the length of the padded data and will be updated to contain the length of the data after depadding.
+
+
 \mysection{Primality Testing}
 \index{Primality Testing}
 The library includes primality testing and random prime functions as well.  The primality tester will perform the test in
